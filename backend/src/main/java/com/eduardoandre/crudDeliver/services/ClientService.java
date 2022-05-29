@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.eduardoandre.crudDeliver.dto.ClientDTO;
 import com.eduardoandre.crudDeliver.entities.Client;
 import com.eduardoandre.crudDeliver.repositories.ClientRepository;
+import com.eduardoandre.crudDeliver.services.exceptions.NotFoundEntityException;
 
 @Service
 public class ClientService {
@@ -27,10 +28,40 @@ public class ClientService {
 	}
 	
 	@Transactional(readOnly = true)
-	public ClientDTO findAll(Long id) {
+	public ClientDTO findById(Long id) {
 		Optional<Client> obj = repository.findById(id);
-		Client entity = obj.orElseThrow(() -> new EntityNotFoundException("Entidade não encontrada"));
+		Client entity = obj.orElseThrow(() -> new NotFoundEntityException("Entidade não encontrada"));
 		return new ClientDTO(entity);
+	}
+
+	@Transactional
+	public ClientDTO insert(ClientDTO dto) {
+		Client entity = new Client();
+		entity.setName(dto.getName());
+		entity.setCpf(dto.getCpf());
+		entity.setIncome(dto.getIncome());
+		entity.setBirthDate(dto.getBirthDate());
+		entity.setChildren(dto.getChildren());
+		entity = repository.save(entity);
+		return new ClientDTO(entity);
+	}
+
+	@Transactional
+	public ClientDTO update(Long id, ClientDTO dto) {
+		try {
+			Client entity = repository.getReferenceById(id);
+			entity.setName(dto.getName());
+			entity.setCpf(dto.getCpf());
+			entity.setIncome(dto.getIncome());
+			entity.setBirthDate(dto.getBirthDate());
+			entity.setChildren(dto.getChildren());
+			entity = repository.save(entity);
+			return new ClientDTO(entity);
+		}
+		catch(EntityNotFoundException e) {
+			throw new NotFoundEntityException("Id não encontrado!");
+						
+		}
 	}
 
 }
